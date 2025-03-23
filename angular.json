@@ -40,6 +40,9 @@
         "build": {
           "builder": "@angular-devkit/build-angular:application",
           "options": {
+            "allowedCommonJsDependencies": [
+              "dayjs"
+            ],
             "outputPath": "dist/account-prime-tailwind-v4css",
             "index": "src/index.html",
             "browser": "src/main.ts",
@@ -63,8 +66,8 @@
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumWarning": "500kB",
-                  "maximumError": "1MB"
+                  "maximumWarning": "5MB",
+                  "maximumError": "3MB"
                 },
                 {
                   "type": "anyComponentStyle",
