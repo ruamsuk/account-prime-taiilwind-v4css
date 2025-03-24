@@ -1,5 +1,6 @@
 import { HttpClient, provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 import { ApplicationConfig, importProvidersFrom, provideZoneChangeDetection } from '@angular/core';
+import { LogLevel, setLogLevel } from '@angular/fire';
 import { initializeApp, provideFirebaseApp } from '@angular/fire/app';
 import { initializeAppCheck, provideAppCheck, ReCaptchaV3Provider } from '@angular/fire/app-check';
 import { getAuth, provideAuth } from '@angular/fire/auth';
@@ -20,6 +21,8 @@ import YourPreset from '../theme/style';
 
 import { routes } from './app.routes';
 import { AuthTokenHttpInterceptorProvider } from './http_interceptors/auth-token.interceptor';
+
+setLogLevel(LogLevel.SILENT);
 
 export const appConfig: ApplicationConfig = {
   providers: [

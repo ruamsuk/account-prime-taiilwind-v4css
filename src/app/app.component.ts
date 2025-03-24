@@ -1,4 +1,6 @@
-import { Component, inject, OnDestroy, OnInit, signal } from '@angular/core';
+import { Component, DestroyRef, inject, OnDestroy, OnInit } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { Router, RouterLink, RouterOutlet } from '@angular/router';
 import { MenuItem } from 'primeng/api';
 import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
@@ -36,10 +38,11 @@ import { SharedModule } from './shared/shared.module';
             <div class="flex items-center gap-2">
               <p-avatar
                 image="{{
-                  currentUser()?.photoURL ?? '/images/dummy-user.png'
+                userPhoto
+                  // currentUser()?.photoURL ?? '/images/dummy-user.png'
                 }}"
                 shape="circle"
-                class=""
+                class="" crossorigin="anonymous"
               />
               <span
                 (click)="menu.toggle($event)"
@@ -74,11 +77,15 @@ export class AppComponent implements OnInit, OnDestroy {
   toastService: ToastService = inject(ToastService);
   menuItemsService: MenuItemsService = inject(MenuItemsService);
   router: Router = inject(Router);
+  private sanitizer: DomSanitizer = inject(DomSanitizer);
+
 
   items: MenuItem[] = [];
   subitems: MenuItem[] = [];
-  isAdmin = signal(false);
+  private destroyRef = inject(DestroyRef);
   userPhoto: string = '';
+  safeProfileUrl: SafeUrl | undefined;
+
   ref: DynamicDialogRef | undefined;
   eventSubscription: Subscription | undefined;
 
@@ -94,12 +101,16 @@ export class AppComponent implements OnInit, OnDestroy {
       .subscribe(() => {
         this.userDialog();
       });
-    this.menuItemsService.getMenuItems().subscribe(menuItems => {
-      this.items = menuItems;
-    });
+    this.menuItemsService
+      .getMenuItems()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(menuItems => {
+        this.items = menuItems;
+      });
 
     this.subitems = this.menuItemsService.getPopupItems();
-    this.userPhoto = this.currentUser()?.photoURL || '/images/dummy-user.png';
+    // this.userPhoto = this.currentUser()?.photoURL || '/images/dummy-user.png';
+    // console.log(this.userPhoto);
 
     /** */
     this.authService.isAdmin().subscribe(isAdmin => {
@@ -109,7 +120,10 @@ export class AppComponent implements OnInit, OnDestroy {
     this.authService.getRole().subscribe(role => {
       console.log('🚩 Role ปัจจุบันของผู้ใช้:', role);
     });
-
+    this.authService.currentUser$.subscribe(user => {
+      this.userPhoto = user?.photoURL || '/images/dummy-user.png';
+      // console.log('👤 ผู้ใช้ปัจจุบัน:', JSON.stringify(user, null, 2));
+    });
   }
 
   private userDialog() {
@@ -127,9 +141,9 @@ export class AppComponent implements OnInit, OnDestroy {
     });
   }
 
-  private logout() {
-    this.authService.logout().then(
-      () => this.router.navigateByUrl('/auth/login').then()
-    );
+  setProfileUrl(url: string) {
+    this.safeProfileUrl = this.sanitizer.bypassSecurityTrustUrl(url);
   }
+
+
 }
