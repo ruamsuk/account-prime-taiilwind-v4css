@@ -105,3 +105,7 @@ label {
   color: gray;
   margin-left: 5px;
 }
+
+.p-error {
+  color: #e75252;
+}

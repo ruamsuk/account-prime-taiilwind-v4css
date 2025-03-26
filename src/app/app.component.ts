@@ -1,6 +1,5 @@
 import { Component, DestroyRef, inject, OnDestroy, OnInit } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { Router, RouterLink, RouterOutlet } from '@angular/router';
 import { MenuItem } from 'primeng/api';
 import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
@@ -10,7 +9,6 @@ import { FooterComponent } from './pages/footer.component';
 import { AuthService } from './services/auth.service';
 import { EventService } from './services/event.service';
 import { MenuItemsService } from './services/menu-items.service';
-import { ToastService } from './services/toast.service';
 import { SharedModule } from './shared/shared.module';
 
 @Component({
@@ -74,17 +72,13 @@ export class AppComponent implements OnInit, OnDestroy {
   authService: AuthService = inject(AuthService);
   dialogService: DialogService = inject(DialogService);
   eventService: EventService = inject(EventService);
-  toastService: ToastService = inject(ToastService);
   menuItemsService: MenuItemsService = inject(MenuItemsService);
   router: Router = inject(Router);
-  private sanitizer: DomSanitizer = inject(DomSanitizer);
-
 
   items: MenuItem[] = [];
   subitems: MenuItem[] = [];
   private destroyRef = inject(DestroyRef);
   userPhoto: string = '';
-  safeProfileUrl: SafeUrl | undefined;
 
   ref: DynamicDialogRef | undefined;
   eventSubscription: Subscription | undefined;
@@ -109,9 +103,6 @@ export class AppComponent implements OnInit, OnDestroy {
       });
 
     this.subitems = this.menuItemsService.getPopupItems();
-    // this.userPhoto = this.currentUser()?.photoURL || '/images/dummy-user.png';
-    // console.log(this.userPhoto);
-
     /** */
     this.authService.isAdmin().subscribe(isAdmin => {
       console.log('🛡️ สถานะ isAdmin ของผู้ใช้:', isAdmin);
@@ -122,7 +113,6 @@ export class AppComponent implements OnInit, OnDestroy {
     });
     this.authService.currentUser$.subscribe(user => {
       this.userPhoto = user?.photoURL || '/images/dummy-user.png';
-      // console.log('👤 ผู้ใช้ปัจจุบัน:', JSON.stringify(user, null, 2));
     });
   }
 
@@ -140,10 +130,5 @@ export class AppComponent implements OnInit, OnDestroy {
       closable: true
     });
   }
-
-  setProfileUrl(url: string) {
-    this.safeProfileUrl = this.sanitizer.bypassSecurityTrustUrl(url);
-  }
-
 
 }

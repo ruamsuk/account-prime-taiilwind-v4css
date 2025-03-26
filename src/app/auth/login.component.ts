@@ -1,33 +1,32 @@
 import { Component, inject, signal } from '@angular/core';
-import { SharedModule } from '../shared/shared.module';
+import { FormBuilder, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { ConfirmationService, MessageService } from 'primeng/api';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
 import { AuthService } from '../services/auth.service';
-import { FormBuilder, Validators } from '@angular/forms';
+import { SharedModule } from '../shared/shared.module';
 import { ForgotPasswordComponent } from './forgot-password.component';
-import { NgClass, NgOptimizedImage } from '@angular/common';
-import { ConfirmDialogModule } from 'primeng/confirmdialog';
 
 
 @Component({
   selector: 'app-login',
-  imports: [SharedModule, RouterLink, NgClass, NgOptimizedImage, ConfirmDialogModule],
+  imports: [SharedModule, RouterLink, ConfirmDialogModule],
   template: `
     <div class="flex justify-center items-center h-screen gap-y-5">
       <div>
         <form [formGroup]="loginForm" (ngSubmit)="login()">
           <p-card [style]="{width:'360px'}">
             <div class="flex justify-center">
-              <img ngSrc="/images/primeng-logo.png" alt="logo" height="43" width="40">
+              <img src="/images/primeng-logo.png" alt="logo" height="43" width="40">
             </div>
             <div class="flex justify-center text-900 text-2xl font-medium my-5">
-              Inquiry 25.
+              Ruamsuk Account
             </div>
             <ng-template pTemplate="p-card-content">
               <div class="field my-2">
                 @if (isEmailValid) {
-                  <label [ngClass]="{'p-error': isEmailValid}" class="mb-2">Email</label>
+                  <label class="p-error mb-2">Email</label>
                 } @else {
                   <label>Email</label>
                 }
@@ -47,7 +46,7 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
               </div>
               <div class="field my-3">
                 @if (isValidPassword) {
-                  <label [ngClass]="{'p-error': isValidPassword}">Password</label>
+                  <label class="p-error">Password</label>
                 } @else {
                   <label>Password</label>
                 }
@@ -186,6 +185,7 @@ export class LoginComponent {
     this.authService.login(email, password).subscribe({
       next: async (userCredential) => {
         const user = userCredential.user;
+        console.log(JSON.stringify(user, null, 2));
 
         if (!user.emailVerified) {
           this.message.add({

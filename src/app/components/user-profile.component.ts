@@ -1,10 +1,10 @@
 import { Component, inject } from '@angular/core';
-import { getAuth } from '@angular/fire/auth';
+import { getAuth, User } from '@angular/fire/auth';
 import { FormControl, FormGroup } from '@angular/forms';
 import { Router } from '@angular/router';
+import { isEqual } from 'lodash';
 import { DynamicDialogRef } from 'primeng/dynamicdialog';
 import { combineLatest, concatMap, Observable } from 'rxjs';
-import { User } from '../models/user.model';
 import { AuthService } from '../services/auth.service';
 import { ImageUploadService } from '../services/image-upload.service';
 import { ToastService } from '../services/toast.service';
@@ -14,7 +14,6 @@ import { SharedModule } from '../shared/shared.module';
   selector: 'app-user-profile',
   imports: [
     SharedModule,
-
   ],
   template: `
     <hr class="h-px bg-gray-200 border-0"/>
@@ -164,19 +163,23 @@ export class UserProfileComponent {
 
     combineLatest([
       this.authService.currentUser$,
-      this.authService.userProfile$
+      this.authService.userProfile$,
     ])
-      .pipe()
       .subscribe(([authUser, userProfile]) => {
+        // const {createdAt, ...profileWithoutCreatedAt} = userProfile;
+        console.log(JSON.stringify(authUser, null, 2));
+        console.log(JSON.stringify(userProfile, null, 2));
         const combineUser = {...authUser, ...userProfile};
         this.profileForm.patchValue(combineUser);
       });
   }
 
   getUserRole() {
-    this.authService.getRole().subscribe(role =>
-      this.role = role);
-    this.profileForm.patchValue({role: this.role});
+    this.authService.getRole().subscribe(role => {
+      // this.role = role;
+      // this.profileForm.patchValue({role: this.role});
+      console.log(role);
+    });
   }
 
   uploadImage(event: any, user: User) {
@@ -196,43 +199,50 @@ export class UserProfileComponent {
 
   compareUserData(formData: any): boolean {
     const storedUserData = JSON.parse(<string>localStorage.getItem('user'));
+    const currentProfileData = this.profileForm.getRawValue();
+
     if (!storedUserData) return false;
 
-    for (const key in storedUserData) {
-      if (storedUserData.hasOwnProperty(key) && storedUserData[key] !== formData[key])
-        return true;
+    if (isEqual(storedUserData, currentProfileData)) {
+      console.log('ข้อมูลไม่เปลี่ยนแปลง');
+    } else {
+      console.log('ข้อมูลมีการเปลี่ยนแปลง');
     }
 
+    // for (const key in storedUserData) {
+    //   if (storedUserData.hasOwnProperty(key) && storedUserData[key] !== formData[key])
+    //     return true;
+    // }
+    //
     return false;
   }
 
 
   async saveProfile() {
-    const formData = this.profileForm.getRawValue();
-    const isChange = this.compareUserData(formData);
-
-    if (isChange) {
-      const profileData = formData;
-      try {
-        await this.authService.newUser({
-          uid: profileData.uid,
-          email: profileData.email,
-          displayName: profileData.displayName,
-          firstName: profileData.firstName,
-          lastName: profileData.lastName,
-          phone: profileData.phone,
-          address: profileData.address,
-          role: profileData.role || 'user',
-        });
-        this.ref.close();
-        this.messageService.showSuccess('Successfully', 'Profile Saved.');
-      } catch (error: any) {
-        this.messageService.showError('Error', error.message);
-      }
-    } else {
-      this.messageService.showInfo('No changes detected', 'Profile is up to date.');
+    // const isChange = this.compareUserData(formData);
+    // console.log(isChange);
+    /*if (isChange) { */
+    const profileData = this.profileForm.getRawValue();
+    try {
+      await this.authService.newUser({
+        uid: profileData.uid,
+        email: profileData.email,
+        displayName: profileData.displayName,
+        firstName: profileData.firstName,
+        lastName: profileData.lastName,
+        phone: profileData.phone,
+        address: profileData.address,
+        role: profileData.role || 'user',
+      });
       this.ref.close();
+      this.messageService.showSuccess('Successfully', 'Profile Saved.');
+    } catch (error: any) {
+      this.messageService.showError('Error', error.message);
     }
+    /*  } else {
+        this.messageService.showInfo('No changes detected', 'Profile is up to date.');
+        this.ref.close();
+      }*/
   }
 
   async sendEmail() {
